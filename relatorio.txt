@@ -1,0 +1,82 @@
+Lívia Ramos Vallim            2320338 3WA
+Maria Eduarda Fonte de Macedo 2320450 3WA
+
+RELATÓRIO - TRABALHO G2: GERADOR DINÂMICO DE FUNÇÕES
+INF1018 - Software Básico (2026.1)
+
+-> DESCRIÇÃO DA IMPLEMENTAÇÃO
+
+A função cria_func foi implementada em cria_func.c e gera,
+dinamicamente, o código de máquina x86-64 de uma nova função
+que chama a função original f com os parâmetros configurados
+conforme o array params.
+
+O código gerado segue a estrutura:
+
+  1. Prólogo: push %rbp / mov %rsp, %rbp / sub $0x20, %rsp
+     Cria o registro de ativação e alinha a pilha para
+     permitir chamadas a funções de biblioteca.
+
+  2. Salva os parâmetros PARAM recebidos na pilha:
+     Os argumentos chegam em %rdi, %rsi, %rdx (ABI x86-64).
+     Como esses registradores serão sobrescritos na etapa
+     seguinte, os valores são salvos em -8(%rbp), -16(%rbp)
+     e -24(%rbp).
+
+  3. Carrega os valores nos registradores para chamar f,
+     tratando os três casos de origem:
+
+     PARAM: carrega o valor salvo na pilha de volta para
+            o registrador correto (mov -offset(%rbp), %rXX).
+
+     FIX:   emite o valor diretamente no código gerado.
+            - INT_PAR: mov $imm32, %eXX (5 bytes, sem REX)
+            - PTR_PAR: movabs $imm64, %rXX (10 bytes, REX.W)
+
+     IND:   emite o endereço da variável no código e gera
+            uma desreferência em runtime.
+            - movabs $addr, %rax
+            - INT_PAR: mov (%rax), %eXX (lê 32 bits)
+            - PTR_PAR: mov (%rax), %rXX (lê 64 bits)
+
+  4. Chama f via call indireto: movabs $f, %rax / call *%rax
+
+  5. Epílogo: leave / ret
+     O valor de retorno de f em %rax chega intacto ao
+     chamador da função gerada.
+
+
+--> TESTES REALIZADOS
+
+Todos os 13 testes do arquivo teste.c foram executados com
+sucesso. A seguir, o resultado final:
+
+[Teste 1]  PARAM, FIX        (mult x * 10)          OK
+[Teste 2]  FIX, PARAM        (mult 10 * x)           OK
+[Teste 3]  IND, FIX          (mult i * 10, sem args) OK
+[Teste 4]  FIX, FIX          (mult 6 * 7, sem args)  OK
+[Teste 5]  PARAM, PARAM, PARAM (tres args)            OK
+[Teste 6]  FIX, PARAM, PARAM  (tres: 100 + y + z)    OK
+[Teste 7]  PTR_PAR com memcmp                         OK
+[Teste 8]  IND, PTR_PAR com memcmp                    OK
+[Teste 9]  1 parâmetro (PARAM)                        OK
+[Teste 10] PARAM, IND, PARAM (tres: x + i + z)       OK
+[Teste 11] FIX, FIX, FIX     (tres: 1 + 2 + 3)       OK
+[Teste 12] PARAM, FIX, PARAM (tres: x + 100 + z)     OK
+[Teste 13] FIX, PARAM, FIX   (tres: 10 + x + 5)      OK
+
+Os testes cobrem todas as combinações de PARAM, FIX e IND,
+os tipos INT_PAR e PTR_PAR, funções com 1, 2 e 3 parâmetros,
+e casos com parâmetros mistos em ordens variadas.
+
+--> O QUE ESTÁ FUNCIONANDO
+
+- Todos os tipos de origem: PARAM, FIX e IND
+- Ambos os tipos de valor: INT_PAR e PTR_PAR
+- Funções com 1, 2 e 3 parâmetros
+- Chamadas a funções de biblioteca (memcmp)
+- IND reflete corretamente mudanças na variável entre
+  chamadas (testado no teste 3 e teste 8)
+
+--> O QUE NÃO ESTÁ FUNCIONANDO
+ Tudo está funcionando conforme o pedido
