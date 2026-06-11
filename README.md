@@ -1,12 +1,4 @@
 # G2_INF1018 — Gerador Dinâmico de Funções
-
-**INF1018 - Software Básico (2026.1) — PUC-Rio**
-
-Lívia Ramos Vallim — 2320338 3WA  
-Maria Eduarda Fonte de Macedo — 2320450 3WA
-
----
-
 ## Descrição
 
 Implementação da função `cria_func`, que gera dinamicamente código de máquina x86-64 em tempo de execução. Dado o endereço de uma função `f` e a descrição de seus parâmetros, `cria_func` grava no vetor `codigo` o código de uma nova função que chama `f` com os parâmetros configurados — podendo amarrá-los a valores fixos, variáveis ou repassá-los do chamador.
