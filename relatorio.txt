@@ -4,7 +4,9 @@ Maria Eduarda Fonte de Macedo 2320450 3WA
 RELATÓRIO - TRABALHO G2: GERADOR DINÂMICO DE FUNÇÕES
 INF1018 - Software Básico (2026.1)
 
--> DESCRIÇÃO DA IMPLEMENTAÇÃO
+=======================================================
+ DESCRIÇÃO DA IMPLEMENTAÇÃO
+=======================================================
 
 A função cria_func foi implementada em cria_func.c e gera,
 dinamicamente, o código de máquina x86-64 de uma nova função
@@ -46,37 +48,177 @@ O código gerado segue a estrutura:
      chamador da função gerada.
 
 
---> TESTES REALIZADOS
+=======================================================
+ TESTES REALIZADOS
+=======================================================
 
-Todos os 13 testes do arquivo teste.c foram executados com
-sucesso. A seguir, o resultado final:
+Os testes foram organizados em três arquivos/blocos:
+teste.c (Bloco A e Bloco B), testes de stress e testes
+adicionais de cria_func. A compilação foi feita com:
 
-[Teste 1]  PARAM, FIX        (mult x * 10)          OK
-[Teste 2]  FIX, PARAM        (mult 10 * x)           OK
-[Teste 3]  IND, FIX          (mult i * 10, sem args) OK
-[Teste 4]  FIX, FIX          (mult 6 * 7, sem args)  OK
-[Teste 5]  PARAM, PARAM, PARAM (tres args)            OK
-[Teste 6]  FIX, PARAM, PARAM  (tres: 100 + y + z)    OK
-[Teste 7]  PTR_PAR com memcmp                         OK
-[Teste 8]  IND, PTR_PAR com memcmp                    OK
-[Teste 9]  1 parâmetro (PARAM)                        OK
-[Teste 10] PARAM, IND, PARAM (tres: x + i + z)       OK
-[Teste 11] FIX, FIX, FIX     (tres: 1 + 2 + 3)       OK
-[Teste 12] PARAM, FIX, PARAM (tres: x + 100 + z)     OK
-[Teste 13] FIX, PARAM, FIX   (tres: 10 + x + 5)      OK
+  gcc -Wall -Wa,--execstack -o teste cria_func.c teste.c
 
-Os testes cobrem todas as combinações de PARAM, FIX e IND,
-os tipos INT_PAR e PTR_PAR, funções com 1, 2 e 3 parâmetros,
-e casos com parâmetros mistos em ordens variadas.
+-------------------------------------------------------
+ BLOCO A — testes que devem PASSAR (39/39 OK)
+-------------------------------------------------------
 
---> O QUE ESTÁ FUNCIONANDO
+[A1] PARAM, FIX(-5) — multiplicador negativo
+  [OK]  f(3)  == -15: -15
+  [OK]  f(-2) ==  10:  10
+  [OK]  f(0)  ==   0:   0
+
+[A2] PARAM, FIX(0) — zero como constante
+  [OK]  f(999) == 0: 0
+  [OK]  f(-1)  == 0: 0
+  [OK]  f(0)   == 0: 0
+
+[A3] PARAM, PARAM — argumentos negativos
+  [OK]  f(-5, -3) == -8: -8
+  [OK]  f(-10, 5) == -5: -5
+  [OK]  f(-1,  1) ==  0:  0
+
+[A4] PARAM, PARAM, FIX(50) — FIX no slot 2 (rdx)
+  [OK]  f(1,  2) ==  53: 53
+  [OK]  f(-3,-7) ==  40: 40
+  [OK]  f(0,  0) ==  50: 50
+
+[A5] FIX(1), FIX(2), PARAM — reencaminhamento rdi -> rdx
+  [OK]  f(3)   ==   6:   6
+  [OK]  f(100) == 103: 103
+  [OK]  f(-3)  ==   0:   0
+
+[A6] IND, IND, FIX(10) — dois IND em sequência (rax clobber?)
+  [OK]  a=1,  b=2  -> 13: 13
+  [OK]  a=5,  b=5  -> 20: 20
+  [OK]  a=-10,b=5  ->  5:  5
+  [OK]  a=0,  b=0  -> 10: 10
+
+[A7] IND, FIX(5), IND — IND nos extremos
+  [OK]  a=1,  b=2  ->  8:  8
+  [OK]  a=0,  b=0  ->  5:  5
+  [OK]  a=-5, b=-5 -> -5: -5
+
+[A8] IND com int negativo — zero-extend de 32 bits
+  [OK]  neg=-5   ->   5:   5
+  [OK]  neg=-100 -> -90: -90
+  [OK]  neg=-10  ->   0:   0
+
+[A9] IND, IND, IND — todos indiretos; leitura dinâmica
+  [OK]   1+ 2+ 3 =  6:  6
+  [OK]  -1-2-3   = -6: -6
+  [OK]   0+ 0+ 0 =  0:  0
+  [OK]  42+ 0+ 0 = 42: 42
+
+[A10] FIX(INT_MIN) e FIX(INT_MAX) — valores limite
+  [OK]  soma(0, INT_MIN) == INT_MIN:   -2147483648
+  [OK]  soma(1, INT_MIN) == INT_MIN+1: -2147483647
+  [OK]  soma(0,  INT_MAX) == INT_MAX:   2147483647
+  [OK]  soma(-1, INT_MAX) == INT_MAX-1: 2147483646
+
+[A11] PARAM, FIX(10), FIX(20) — dois FIX após PARAM
+  [OK]  f(0)   ==  30: 30
+  [OK]  f(5)   ==  35: 35
+  [OK]  f(-30) ==   0:  0
+
+[A12] PTR PARAM + PTR FIX(j=1) + INT PARAM — FIX ptr no slot 1
+  [OK]  prefixo-5  'hello abc'   == 0: 0
+  [OK]  prefixo-5  'HELLO abc'   != 0: 1
+  [OK]  prefixo-11 'hello world' == 0: 0
+
+-------------------------------------------------------
+ BLOCO B — testes que devem FALHAR
+-------------------------------------------------------
+ 
+[B1] IND com NULL — SIGSEGV esperado
+  RESULTADO: Segmentation fault (core dumped)
+  A função gerada tenta desreferenciar um ponteiro NULL
+  ao carregar o valor IND, causando falha de segmentação
+  imediata. Comportamento esperado e correto.
+ 
+[B2] n=0 — nenhum parâmetro gerenciado
+  RESULTADO: os dois subcasos PASSARAM quando não deviam.
+  Com n=0, cria_func não configura nenhum registrador,
+  mas a função-alvo (mult) ainda recebe os argumentos
+  originais via ABI — então o resultado coincide com o
+  valor correto por acidente, e o teste não detecta falha.
+  Este comportamento é esperado para uma entrada inválida:
+  o enunciado não garante erro observável nesse caso.
+ 
+[B3] buffer de 15 bytes — stack smash esperado
+  RESULTADO: resultado: 6
+             *** stack smashing detected ***: terminated
+             Aborted (core dumped)
+  O buffer de 15 bytes é pequeno demais para o código
+  gerado, que escreve além do fim do vetor e corrompe
+  a pilha. O detector de stack smashing do GCC identifica
+  a corrupção e aborta o programa. Comportamento esperado.
+ 
+[B4] n=4 — OOB nas arrays internas; resultado errado ou crash
+  RESULTADO: Segmentation fault (core dumped)
+  Com n=4, o código acessa posições fora dos arrays
+  internos (offsets[], salva_hi[], fix_op[]), gerando
+  um acesso inválido a memória. Comportamento esperado.
+
+-------------------------------------------------------
+ TESTES DE STRESS (29/29 OK)
+-------------------------------------------------------
+
+[1]  identidade() com FIX em valores extremos            OK
+[2]  ret_neg(x) com PARAM negativo                       OK
+[3]  mult(x, -7) com PARAM + FIX negativo                OK
+[4]  identidade() com IND alternando extremos            OK
+[5]  soma3(a, -1000, v) PARAM + FIX + IND                OK
+[6]  id_ptr(p) - retorno de ponteiro preservado          OK
+[7]  deref() com PTR_PAR FIX apontando para heap         OK
+[8]  conta_digitos(x) - alvo chama snprintf internamente OK
+[9]  estabilidade em 1.000.000 de chamadas               OK
+[10] duas funções geradas ao mesmo tempo                 OK
+
+-------------------------------------------------------
+ TESTES ADICIONAIS DE cria_func (26/26 OK)
+-------------------------------------------------------
+
+[1]  identidade(x) com PARAM                          OK
+[2]  identidade() com FIX=99                          OK
+[3]  identidade() com IND (variável mutável)          OK
+[4]  mult(x,10) com PARAM + FIX                       OK
+[5]  mult(i,10) com IND + FIX                         OK
+[6]  mult(5, x) com FIX + PARAM (reordenação)         OK
+[7]  soma3(a,b,c) com 3 PARAM                         OK
+[8]  soma3(a, 100, b) com PARAM + FIX + PARAM         OK
+[9]  deref(p) com PTR_PAR + PARAM                     OK
+[10] deref() com PTR_PAR + FIX (endereço fixo)        OK
+[11] tam_str(s) com PTR_PAR + PARAM                   OK
+[12] memcmp(fixa, s, n) com FIX ptr + PARAM ptr + INT OK
+
+
+=======================================================
+ O QUE ESTÁ FUNCIONANDO
+=======================================================
 
 - Todos os tipos de origem: PARAM, FIX e IND
 - Ambos os tipos de valor: INT_PAR e PTR_PAR
 - Funções com 1, 2 e 3 parâmetros
-- Chamadas a funções de biblioteca (memcmp)
+- Parâmetros mistos em todas as ordens testadas
+- Valores extremos: INT_MIN, INT_MAX, negativos, zero
+- Chamadas a funções de biblioteca (memcmp, snprintf)
 - IND reflete corretamente mudanças na variável entre
-  chamadas (testado no teste 3 e teste 8)
+  chamadas (testado em A6, A7, A9 e testes adicionais)
+- Estabilidade em 1.000.000 de chamadas consecutivas
+- Duas funções geradas simultaneamente sem interferência
 
---> O QUE NÃO ESTÁ FUNCIONANDO
- Tudo está funcionando conforme o pedido
+
+=======================================================
+ O QUE NÃO ESTÁ FUNCIONANDO
+=======================================================
+
+Toda a funcionalidade exigida pelo enunciado está
+implementada e funcionando corretamente.
+
+O único resultado negativo observado foi em B2 (n=0),
+que é um caso-limite sem comportamento de erro
+garantido: com nenhum parâmetro configurado, a função
+gerada não altera os registradores e o resultado
+coincide com o valor correto por acidente, impedindo
+a detecção de falha pelo teste. Este comportamento
+está dentro do esperado para uma entrada inválida.

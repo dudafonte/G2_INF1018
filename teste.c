@@ -289,7 +289,7 @@ void teste_a12_ptr_fix_pos1(void)
  *
  * Gera: movabs $0,%rax; mov (%rax),%edi — leitura do endereço 0.
  * cria_func não valida ponteiros; responsabilidade é do chamador.
- *
+ */
 void teste_b1_ind_null(void)
 {
     printf("\n[B1] IND com NULL — SIGSEGV esperado\n");
@@ -300,7 +300,7 @@ void teste_b1_ind_null(void)
     fp f=(fp)c;
     printf("resultado: %d\n", f()); // SIGSEGV aqui
 }
-*/
+
 
 /*
  * B2 — n=0 (abaixo do mínimo)  →  "passa por acidente"
@@ -338,7 +338,7 @@ void teste_b2_n_zero(void)
  * Código gerado ≈ 58 bytes; buffer[15] causa overflow de pilha.
  * Com -fstack-protector (padrão no GCC moderno) → "stack smashing detected"
  * na saída de cria_func. Sem protetor → UB silencioso / crash tardio.
- *
+ */
 void teste_b3_buffer_overflow(void)
 {
     printf("\n[B3] buffer de 15 bytes — stack smash esperado\n");
@@ -351,7 +351,6 @@ void teste_b3_buffer_overflow(void)
     fp f=(fp)c;
     printf("resultado: %d\n", f());
 }
-*/
 
 /*
  * B4 — n=4 (acima do máximo=3)  →  OOB nas arrays internas  (COMENTADO — pode crashar)
@@ -364,6 +363,7 @@ void teste_b3_buffer_overflow(void)
  * Se descomentar, o checar_deve_falhar abaixo capturaria se por acaso
  * o resultado vier correto (1+2+3+4=10):
  *
+ */
 void teste_b4_n_maior_3(void)
 {
     printf("\n[B4] n=4 — OOB nas arrays; resultado errado ou crash\n");
@@ -374,7 +374,7 @@ void teste_b4_n_maior_3(void)
     checar_deve_falhar("quatro(1,2,3,4) correto=10, n=4 deve diferir",
                        f(1,2,3,4), 10);
 }
-*/
+
 
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -397,7 +397,11 @@ int main(void)
     teste_a12_ptr_fix_pos1();
 
     printf("\n\n=== BLOCO B — devem FALHAR ===\n");
+    //teste_b1_ind_null();
     teste_b2_n_zero();   /* unico B seguro para rodar sem crashar */
+    //teste_b3_buffer_overflow();
+    //teste_b4_n_maior_3();
+
 
     printf("\n====================================\n");
     if (falhou == 0) {
