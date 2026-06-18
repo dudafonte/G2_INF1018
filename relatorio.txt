@@ -59,92 +59,92 @@ adicionais de cria_func. A compilação foi feita com:
   gcc -Wall -Wa,--execstack -o teste cria_func.c teste.c
 
 -------------------------------------------------------
- BLOCO A — testes que devem PASSAR (39/39 OK)
+ BLOCO A - testes que devem PASSAR (39/39 OK)
 -------------------------------------------------------
 
-[A1] PARAM, FIX(-5) — multiplicador negativo
+[A1] PARAM, FIX(-5) - multiplicador negativo
   [OK]  f(3)  == -15: -15
   [OK]  f(-2) ==  10:  10
   [OK]  f(0)  ==   0:   0
 
-[A2] PARAM, FIX(0) — zero como constante
+[A2] PARAM, FIX(0) - zero como constante
   [OK]  f(999) == 0: 0
   [OK]  f(-1)  == 0: 0
   [OK]  f(0)   == 0: 0
 
-[A3] PARAM, PARAM — argumentos negativos
+[A3] PARAM, PARAM - argumentos negativos
   [OK]  f(-5, -3) == -8: -8
   [OK]  f(-10, 5) == -5: -5
   [OK]  f(-1,  1) ==  0:  0
 
-[A4] PARAM, PARAM, FIX(50) — FIX no slot 2 (rdx)
+[A4] PARAM, PARAM, FIX(50) - FIX no slot 2 (rdx)
   [OK]  f(1,  2) ==  53: 53
   [OK]  f(-3,-7) ==  40: 40
   [OK]  f(0,  0) ==  50: 50
 
-[A5] FIX(1), FIX(2), PARAM — reencaminhamento rdi -> rdx
+[A5] FIX(1), FIX(2), PARAM - reencaminhamento rdi -> rdx
   [OK]  f(3)   ==   6:   6
   [OK]  f(100) == 103: 103
   [OK]  f(-3)  ==   0:   0
 
-[A6] IND, IND, FIX(10) — dois IND em sequência (rax clobber?)
+[A6] IND, IND, FIX(10) - dois IND em sequência (rax clobber?)
   [OK]  a=1,  b=2  -> 13: 13
   [OK]  a=5,  b=5  -> 20: 20
   [OK]  a=-10,b=5  ->  5:  5
   [OK]  a=0,  b=0  -> 10: 10
 
-[A7] IND, FIX(5), IND — IND nos extremos
+[A7] IND, FIX(5), IND - IND nos extremos
   [OK]  a=1,  b=2  ->  8:  8
   [OK]  a=0,  b=0  ->  5:  5
   [OK]  a=-5, b=-5 -> -5: -5
 
-[A8] IND com int negativo — zero-extend de 32 bits
+[A8] IND com int negativo - zero-extend de 32 bits
   [OK]  neg=-5   ->   5:   5
   [OK]  neg=-100 -> -90: -90
   [OK]  neg=-10  ->   0:   0
 
-[A9] IND, IND, IND — todos indiretos; leitura dinâmica
+[A9] IND, IND, IND - todos indiretos; leitura dinâmica
   [OK]   1+ 2+ 3 =  6:  6
   [OK]  -1-2-3   = -6: -6
   [OK]   0+ 0+ 0 =  0:  0
   [OK]  42+ 0+ 0 = 42: 42
 
-[A10] FIX(INT_MIN) e FIX(INT_MAX) — valores limite
+[A10] FIX(INT_MIN) e FIX(INT_MAX) - valores limite
   [OK]  soma(0, INT_MIN) == INT_MIN:   -2147483648
   [OK]  soma(1, INT_MIN) == INT_MIN+1: -2147483647
   [OK]  soma(0,  INT_MAX) == INT_MAX:   2147483647
   [OK]  soma(-1, INT_MAX) == INT_MAX-1: 2147483646
 
-[A11] PARAM, FIX(10), FIX(20) — dois FIX após PARAM
+[A11] PARAM, FIX(10), FIX(20) - dois FIX após PARAM
   [OK]  f(0)   ==  30: 30
   [OK]  f(5)   ==  35: 35
   [OK]  f(-30) ==   0:  0
 
-[A12] PTR PARAM + PTR FIX(j=1) + INT PARAM — FIX ptr no slot 1
+[A12] PTR PARAM + PTR FIX(j=1) + INT PARAM - FIX ptr no slot 1
   [OK]  prefixo-5  'hello abc'   == 0: 0
   [OK]  prefixo-5  'HELLO abc'   != 0: 1
   [OK]  prefixo-11 'hello world' == 0: 0
 
 -------------------------------------------------------
- BLOCO B — testes que devem FALHAR
+ BLOCO B - testes que devem FALHAR
 -------------------------------------------------------
  
-[B1] IND com NULL — SIGSEGV esperado
+[B1] IND com NULL - SIGSEGV esperado
   RESULTADO: Segmentation fault (core dumped)
   A função gerada tenta desreferenciar um ponteiro NULL
   ao carregar o valor IND, causando falha de segmentação
   imediata. Comportamento esperado e correto.
  
-[B2] n=0 — nenhum parâmetro gerenciado
+[B2] n=0 - nenhum parâmetro gerenciado
   RESULTADO: os dois subcasos PASSARAM quando não deviam.
   Com n=0, cria_func não configura nenhum registrador,
   mas a função-alvo (mult) ainda recebe os argumentos
-  originais via ABI — então o resultado coincide com o
+  originais via ABI - então o resultado coincide com o
   valor correto por acidente, e o teste não detecta falha.
   Este comportamento é esperado para uma entrada inválida:
   o enunciado não garante erro observável nesse caso.
  
-[B3] buffer de 15 bytes — stack smash esperado
+[B3] buffer de 15 bytes - stack smash esperado
   RESULTADO: resultado: 6
              *** stack smashing detected ***: terminated
              Aborted (core dumped)
@@ -153,7 +153,7 @@ adicionais de cria_func. A compilação foi feita com:
   a pilha. O detector de stack smashing do GCC identifica
   a corrupção e aborta o programa. Comportamento esperado.
  
-[B4] n=4 — OOB nas arrays internas; resultado errado ou crash
+[B4] n=4 - OOB nas arrays internas; resultado errado ou crash
   RESULTADO: Segmentation fault (core dumped)
   Com n=4, o código acessa posições fora dos arrays
   internos (offsets[], salva_hi[], fix_op[]), gerando
@@ -173,24 +173,6 @@ adicionais de cria_func. A compilação foi feita com:
 [8]  conta_digitos(x) - alvo chama snprintf internamente OK
 [9]  estabilidade em 1.000.000 de chamadas               OK
 [10] duas funções geradas ao mesmo tempo                 OK
-
--------------------------------------------------------
- TESTES ADICIONAIS DE cria_func (26/26 OK)
--------------------------------------------------------
-
-[1]  identidade(x) com PARAM                          OK
-[2]  identidade() com FIX=99                          OK
-[3]  identidade() com IND (variável mutável)          OK
-[4]  mult(x,10) com PARAM + FIX                       OK
-[5]  mult(i,10) com IND + FIX                         OK
-[6]  mult(5, x) com FIX + PARAM (reordenação)         OK
-[7]  soma3(a,b,c) com 3 PARAM                         OK
-[8]  soma3(a, 100, b) com PARAM + FIX + PARAM         OK
-[9]  deref(p) com PTR_PAR + PARAM                     OK
-[10] deref() com PTR_PAR + FIX (endereço fixo)        OK
-[11] tam_str(s) com PTR_PAR + PARAM                   OK
-[12] memcmp(fixa, s, n) com FIX ptr + PARAM ptr + INT OK
-
 
 =======================================================
  O QUE ESTÁ FUNCIONANDO
