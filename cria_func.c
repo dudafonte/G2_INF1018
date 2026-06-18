@@ -47,20 +47,20 @@ void cria_func(void* f, DescParam params[], int n, unsigned char codigo[])
         } else if (params[j].orig_val == FIX) {
 
         if (params[j].tipo_val == INT_PAR) {
-            /* mov $val32, %eXX  — 5 bytes, sem REX */
+            /* mov $val32, %eXX  - 5 bytes, sem REX */
             codigo[i++] = fix_op[j];
             *((int*)(codigo+i)) = params[j].valor.v_int;
             i += 4;
 
         } else {
-            /* movabs $ptr64, %rXX  — 10 bytes, com REX.W */
+            /* movabs $ptr64, %rXX  - 10 bytes, com REX.W */
             codigo[i++] = 0x48;
             codigo[i++] = fix_op[j];
             *((void**)(codigo+i)) = params[j].valor.v_ptr;
             i += 8;
         }    
       }  else if (params[j].orig_val == IND) {
-           unsigned char ind_op_int[] = {0x38, 0x30, 0x10}; // ModRM: (%rax)→edi/esi/edx
+           unsigned char ind_op_int[] = {0x38, 0x30, 0x10}; // ModRM:(%rax)->edi/esi/edx
            unsigned char ind_op_ptr[] = {0x38, 0x30, 0x10}; // mesmo ModRM, mas com REX
 
           /* movabs $addr, %rax */
